@@ -1,17 +1,25 @@
 package br.com.phamtecnologia.api_clientes.factories;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+@Component
 public class ConnectionFactory {
 
-    public static Connection getConnection() throws SQLException {
+    @Value("${datasource.host}")
+    private String host;
 
-        var host = "jdbc:postgresql://localhost:5432/bd_api_clientes";
-        var user = "postgres";
-        var pass = "root";
+    @Value("${datasource.user}")
+    private String user;
 
+    @Value("${datasource.pass}")
+    private String pass;
+
+    public Connection getConnection() throws Exception {
         return DriverManager.getConnection(host, user, pass);
     }
 }

@@ -2,11 +2,19 @@ package br.com.phamtecnologia.api_clientes.services;
 
 import br.com.phamtecnologia.api_clientes.dtos.ClienteRequest;
 import br.com.phamtecnologia.api_clientes.entities.Cliente;
+import br.com.phamtecnologia.api_clientes.entities.Endereco;
 import br.com.phamtecnologia.api_clientes.repositories.ClienteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class ClienteService {
+
+    @Autowired
+    private ClienteRepository clienteRepository;
 
     public void cadastrarCliente (ClienteRequest request) throws Exception{
 
@@ -18,14 +26,31 @@ public class ClienteService {
             throw new IllegalArgumentException("O cpf do cliente é obrigatório");
         }
 
-        var clienteRepository = new ClienteRepository();
+        if (request.enderecos() == null || request.enderecos().length == 0) {
+            throw new IllegalArgumentException("O cliente deve ter pelo menos 1 endereço para ser cadastrado.");
+        }
+
         if (clienteRepository.cpfExistente(request.cpf())) {
             throw new IllegalArgumentException("O cpf já está cadastrado. Tente outro.");
         }
 
         var cliente = new Cliente();
+        cliente.setEnderecos(new ArrayList<>());
         cliente.setNome(request.nome());
         cliente.setCpf(request.cpf());
+
+        for (var item : request.enderecos()) {
+
+            var endereco = new Endereco();
+            endereco.setLogradouro(item.logradouro());
+            endereco.setNumero(item.numero());
+            endereco.setComplemento(item.complemento());
+            endereco.setBairro(item.bairro());
+            endereco.setCidade(item.cidade());
+            endereco.setUf(item.uf());
+            endereco.setCep(item.cep());
+            cliente.getEnderecos().add(endereco);
+        }
 
         clienteRepository.inserir(cliente);
 
@@ -36,8 +61,7 @@ public class ClienteService {
         if (nome == null || nome.trim().length() < 5) {
             throw new IllegalArgumentException("O nome do cliente para pesquisa deve ter menos 5 caracteres.");
         }
-        var clienteRespository = new ClienteRepository();
-        var lista = clienteRespository.listar(nome);
+        var lista = clienteRepository.listar(nome);
 
         return lista;
     }
