@@ -1,8 +1,19 @@
 package br.com.phamtecnologia.api_clientes.entities;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
 @Data
+@JsonPropertyOrder({
+        "id",
+        "logradouro",
+        "numero",
+        "complemento",
+        "bairro",
+        "cidade",
+        "uf",
+        "cep"
+})
 public class Endereco {
 
     private Integer id;

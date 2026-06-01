@@ -1,12 +1,14 @@
 package br.com.phamtecnologia.api_clientes.repositories;
 
 import br.com.phamtecnologia.api_clientes.entities.Cliente;
+import br.com.phamtecnologia.api_clientes.entities.Endereco;
 import br.com.phamtecnologia.api_clientes.factories.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Repository
@@ -51,7 +53,6 @@ public class ClienteRepository {
 
                     statement.execute();
 
-
                 }
             }
 
@@ -81,25 +82,87 @@ public class ClienteRepository {
 
         try (var connection = connectionFactory.getConnection()) {
             var statement = connection.prepareStatement("""
-                SELECT * FROM clientes
-                WHERE nome LIKE ?
-                ORDER BY nome
+                             SELECT
+                                 c.ID AS IDCLIENTE,
+                                 c.NOME,
+                                 c.CPF,
+                                 e.ID AS IDENDERECO,
+                                 e.LOGRADOURO,
+                                 e.NUMERO,
+                                 e.COMPLEMENTO,
+                                 e.BAIRRO,
+                                 e.CIDADE,
+                                 e.UF,
+                                 e.CEP
+                             FROM CLIENTES c
+                                      LEFT JOIN ENDERECOS e
+                             ON c.ID = e.CLIENTE_ID
+                             WHERE c.NOME ILIKE ?
+                             ORDER BY c.NOME;\s
             """);
             statement.setString(1, "%" + nome + "%");
             var result  = statement.executeQuery();
 
             var lista = new ArrayList<Cliente>();
 
+            var map = new HashMap<Integer, Cliente>();
+
             while (result.next()) {
-                var cliente = new Cliente();
+                var clienteId = result.getInt("IDCLIENTE");
 
-                cliente.setId(result.getInt("id"));
-                cliente.setNome(result.getString("nome"));
-                cliente.setCpf(result.getString("CPF"));
+                Cliente cliente;
 
-                lista.add(cliente);
+                if(map.containsKey(clienteId)) {
+                    cliente = map.get(clienteId);
+                }
+                else {
+                    cliente = new Cliente();
+
+                    cliente.setId(result.getInt("IDCLIENTE"));
+                    cliente.setNome(result.getString("NOME"));
+                    cliente.setCpf(result.getString("CPF"));
+                    cliente.setEnderecos(new ArrayList<>());
+
+                    map.put(clienteId, cliente);
+
+                    lista.add(cliente);
+
+                }
+
+                var  endereco = new Endereco();
+
+                endereco.setId(result.getInt("idendereco"));
+                endereco.setLogradouro(result.getString("logradouro"));
+                endereco.setNumero(result.getString("numero"));
+                endereco.setComplemento(result.getString("complemento"));
+                endereco.setBairro(result.getString("bairro"));
+                endereco.setCidade(result.getString("cidade"));
+                endereco.setUf(result.getString("uf"));
+                endereco.setCep(result.getString("cep"));
+
+                cliente.getEnderecos().add(endereco);
+
+
             }
             return lista;
+        }
+    }
+
+    public boolean excluir(Integer id) throws Exception {
+        try (var connection = connectionFactory.getConnection()) {
+
+            var statement = connection.prepareStatement("""
+                    UPDATE clientes
+                    SET status = 0,
+                        datahoraexclusao = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                    AND status = 1
+            """);
+            statement.setInt(1, id);
+
+            var rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
+
         }
     }
 }

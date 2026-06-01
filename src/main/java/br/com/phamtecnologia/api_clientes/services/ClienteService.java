@@ -16,7 +16,7 @@ public class ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
 
-    public void cadastrarCliente (ClienteRequest request) throws Exception{
+    public void cadastrarCliente(ClienteRequest request) throws Exception {
 
         if (request.nome() == null || request.nome().trim().length() < 6) {
             throw new IllegalArgumentException("O nome do cliente é obrigatório e deve ter pelo menos 6 caracteres");
@@ -56,7 +56,7 @@ public class ClienteService {
 
     }
 
-    public List<Cliente> pesquisarClientes(String nome) throws Exception{
+    public List<Cliente> pesquisarClientes(String nome) throws Exception {
 
         if (nome == null || nome.trim().length() < 5) {
             throw new IllegalArgumentException("O nome do cliente para pesquisa deve ter menos 5 caracteres.");
@@ -65,4 +65,14 @@ public class ClienteService {
 
         return lista;
     }
+
+    public void excluirCliente(Integer id) throws Exception {
+
+        var result = clienteRepository.excluir(id);
+
+        if (!result) {
+            throw new IllegalArgumentException("Nenhum cliente foi encontrado para exclusão.");
+        }
+    }
+
 }
